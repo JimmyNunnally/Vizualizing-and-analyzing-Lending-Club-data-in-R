@@ -1,0 +1,104 @@
+
+
+
+```{r}
+#Initiating the librariers that we will need
+library(tidyverse)
+library(readxl)
+
+# Read the Data
+setwd("/Users/jimmy/AnacondaProjects/Data602/Group Project")
+Sales = read_excel(path = "Product Sales.xlsx", sheet ="Sales")
+lendingclub=load(file = "LendingClub")
+```
+```{r}
+
+head(LendingClub)
+
+
+```
+```{r}
+
+# I like to start witha  box plot because it can display a lot of data.  We are interested in loan defaults, so we need to keep this context in mind
+
+library(ggplot2)
+ggplot(LendingClub, aes(x=residence_property, y= adjusted_annual_inc))+geom_boxplot()+scale_y_continuous(limits = c(5000,12500))+facet_wrap(~loan_default)
+
+# What is this showing us?  Well we can see that renters who default received higher loans than renters who did not default.  The opposite is true for those who own their residences.  This is interesting
+
+```
+
+```
+
+```{r}
+by(LendingClub$pct_loan_income,LendingClub$loan_default, summary )
+```
+```{r}
+#We are most interested in why loans default, lets look at intuitive metrics that might determine why.
+# we can start with a side by side comaprison of loans that don't default with loans that do
+qplot(pct_loan_income, data = LendingClub, color= I("blue"), fill=("#09DD09"))+facet_wrap(~loan_default)
+
+# We can see that the "good" loans are more left distrubted where has defaulted loans appear more normalized.pct)loan_income therefore is a meaningful variable we will need to use in our future models
+```
+
+
+
+
+```{r}
+# lets look at sales data now
+# First we can check out the geographic distrubtions of the companies
+
+
+
+
+             
+```
+
+
+`
+
+```{r}
+
+# Decision tree time!
+library(rpart)
+library(rpart.plot)
+#generating test/train split
+## 75% of the sample size
+smp_size <- floor(0.75 * nrow(LendingClub))
+# seed for reproductible results
+set.seed(1234)
+train_ind <- sample(seq_len(nrow(LendingClub)), size = smp_size)
+
+train <- LendingClub[train_ind, ]
+test <- LendingClub[-train_ind, ]
+
+
+#The model itself, we are taking in all variables and playing with the default settings so that it actually generates more than one node)
+fit <- rpart(loan_default ~.,
+  	method="class", data=train,control=rpart.control(minsplit=3, minbucket = 3, cp=0.00015))
+
+#printcp(fit) # display the results 
+#plotcp(fit) # visualize cross-validation results 
+#summary(fit) # detailed summary of splits
+
+plot(fit, uniform=TRUE, 
+  	main="Classification Tree for Lending Club")
+text(fit, use.n=TRUE, all=TRUE, cex=.8)
+
+
+
+#This is generating a picture of the decision tree
+rpart.plot(fit)
+
+
+
+#building the classification matrix and printing the results
+Prediction <- predict(fit, test, type = "class")
+table(Prediction,test$loan_default)
+
+# All in all it looks like our model does a pretty good job
+      
+```
+
+
+
